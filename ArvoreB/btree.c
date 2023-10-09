@@ -86,24 +86,22 @@ int buscarChave(int n, const int *a, int chave)
 
 void splitChild(btNo *x, int child, int ordem)
 {
-	int t = ordem / 2 + ordem % 2;
-
 	btNo *z = btNoCriar(ordem);
 	btNo *y = x->filhos[child];
 	z->ehFolha = y->ehFolha;
-	z->numChaves = t - 1;
-	for (int j = 0; j < t - 1; j++)
+	z->numChaves = ordem / 2;
+	for (int j = 0; j < z->numChaves; j++)
 	{
-		z->chaves[j] = y->chaves[j + 1];
+		z->chaves[j] = y->chaves[j + ordem / 2 + 1];
 	}
 	if (!y->ehFolha)
 	{
-		for (int j = 0; j < t; j++)
+		for (int j = ordem / 2; j < ordem - 1; j++)
 		{
-			z->filhos[j] = y->filhos[j + t];
+			z->filhos[j] = y->filhos[j + 1];
 		}
 	}
-	y->numChaves = t - 1;
+	y->numChaves = ordem / 2;
 	for (int j = x->numChaves + 1; j > child + 1; j--)
 	{
 		x->filhos[j + 1] = y->filhos[j];
@@ -113,23 +111,23 @@ void splitChild(btNo *x, int child, int ordem)
 	{
 		x->filhos[j + 1] = x->filhos[j];
 	}
-	// x->chaves[child] = y->chaves[child];
-	// x->numChaves = x->numChaves + 1;
+	x->chaves[child] = y->chaves[child + 1];
+	x->numChaves++;
 }
 
 void insertNonFullNo(btNo *x, int chave, int ordem)
 {
 	int i = x->numChaves;
 
+	int pos = buscarChave(i, x->chaves, chave);
+	if (pos < i && x->chaves[pos] == chave)
+		return;
 	if (x->ehFolha)
 	{
-		while (i >= 0 && chave < x->chaves[i - 1])
-		{
-			x->chaves[i] = x->chaves[i - 1];
-			i = i - 1;
-		}
-		x->chaves[i] = chave;
-		x->numChaves = x->numChaves + 1;
+		for (int j = pos; j < x->numChaves; j++)
+			x->chaves[j + 1] = x->chaves[j];
+		x->chaves[pos] = chave;
+		x->numChaves++;
 	}
 	else
 	{
@@ -137,7 +135,7 @@ void insertNonFullNo(btNo *x, int chave, int ordem)
 		{
 			i = i - 1;
 		}
-		if (x->filhos[i]->numChaves == ordem / 2 - 1)
+		if (x->filhos[i]->numChaves == ordem - 1)
 		{
 			splitChild(x, i, ordem);
 			if (chave > x->chaves[i])
@@ -153,17 +151,15 @@ void btInserir(bTree b, int chave)
 {
 	btNo *r = b.raiz;
 
-	if (r->numChaves == b.ordem - 1)
+	insertNonFullNo(r, chave, b.ordem);
+	if (r->numChaves == b.ordem)
 	{
 		btNo *s = cpNo(r, b.ordem);
 		r->numChaves = 0;
 		r->filhos[0] = s;
 		r->ehFolha = false;
 		splitChild(r, 0, b.ordem);
-		insertNonFullNo(r, chave, b.ordem);
 	}
-	else
-		insertNonFullNo(b.raiz, chave, b.ordem);
 }
 
 int buscar(btNo *no, int chave)
