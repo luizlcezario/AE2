@@ -6,15 +6,17 @@ void print(btNo *no)
 {
 	int i;
 
-	printf("[ ");
-	for (i = 0; i < no->numChaves || no->filhos[i] != NULL; i++)
+	if (no)
 	{
-		if (no->filhos[i] != NULL)
+		printf("[ ");
+		for (i = 0; i < no->numChaves; i++)
+		{
 			print(no->filhos[i]);
-		if (i < no->numChaves)
-			printf("%i ", no->chaves[i]);
+			printf("%d ", no->chaves[i]);
+		}
+		print(no->filhos[i]);
+		printf("] ");
 	}
-	printf("] ");
 }
 
 void testInserir()
@@ -23,9 +25,10 @@ void testInserir()
 	bTree b = btCriar(3);
 	for (int a = 0; a < 10; a++)
 	{
+		printf("\n@@@ inserindo %i\n", i[a]);
 		btInserir(b, i[a]);
 		print(b.raiz);
-		printf("\n@@@\n");
+		printf("\n");
 	}
 	btDestruir(b);
 }

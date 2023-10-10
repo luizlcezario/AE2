@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 #include <assert.h>
 
 typedef struct btNo
@@ -26,5 +27,6 @@ void btInserir(bTree t, int key);
 int btAltura(bTree t);
 int btContaNos(bTree t);
 int btContaChaves(bTree t);
+void print(btNo *no);
 
 #endif

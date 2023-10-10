@@ -9,12 +9,13 @@ btNo *btNoCriar(int ordem)
 	no->chaves = (int *)malloc(sizeof(int) * ordem + 1);
 	no->chaves[ordem] = 0;
 	no->filhos = (btNo **)calloc(ordem + 1, sizeof(btNo *));
+	return no;
 }
 
 btNo *cpNo(btNo *x, int ordem)
 {
 	btNo *cpy = btNoCriar(ordem);
-	for (int i = 0; i < ordem; i++)
+	for (int i = 0; i < ordem + 1; i++)
 	{
 		cpy->chaves[i] = x->chaves[i];
 		x->chaves[i] = 0;
@@ -27,25 +28,26 @@ btNo *cpNo(btNo *x, int ordem)
 bTree btCriar(const unsigned char ordem)
 {
 	bTree b;
-	// IMPLEMENTAR!
+
 	b.ordem = ordem;
 	b.raiz = btNoCriar(ordem);
-	// DICA 1: Crie uma funcao auxiliar
-	// DICA 2: Alem do no, nao esqueca de alocar a lista de chaves e filhos, de acordo com a ordem:
-	//           A lista de chaves tem o tamanho da ordem (um a mais, utilizado como auxiliar)
-	//           A lista de filhos tem o tamanho da ordem + 1 (um a mais, utilizado como auxiliar)
-	// DICA 3: Nao esqueca de inicializar todos atributos (ver btree.h)
 	return b;
 }
 
 void btNoDestruir(btNo *no)
 {
-	for (int a = 0; no->filhos[a] != NULL; a++)
+	int a;
+
+	if (no)
 	{
+		for (a = 0; a < no->numChaves; a++)
+		{
+			btNoDestruir(no->filhos[a]);
+		}
 		btNoDestruir(no->filhos[a]);
+		free(no->chaves);
+		free(no->filhos);
 	}
-	free(no->chaves);
-	free(no->filhos);
 }
 
 void btDestruir(bTree b)
@@ -53,8 +55,6 @@ void btDestruir(bTree b)
 	// IMPLEMENTAR!
 	btNoDestruir(b.raiz);
 	free(b.raiz);
-	// DICA 1: Destrua primeiro os filhos
-	// DICA 2: Nao esqueca de desalocar a lista de chaves e filhos de cada noh
 }
 
 int buscarChave(int n, const int *a, int chave)
@@ -84,34 +84,30 @@ int buscarChave(int n, const int *a, int chave)
 	return hi;
 }
 
+
 void splitChild(btNo *x, int child, int ordem)
 {
+	int t = ordem / 2;
 	btNo *z = btNoCriar(ordem);
 	btNo *y = x->filhos[child];
 	z->ehFolha = y->ehFolha;
-	z->numChaves = ordem / 2;
-	for (int j = 0; j < z->numChaves; j++)
-	{
-		z->chaves[j] = y->chaves[j + ordem / 2 + 1];
-	}
+	z->numChaves = t;
+	for (int j = 0; j < t; j++)
+		z->chaves[j] = y->chaves[j + t + 1];
 	if (!y->ehFolha)
 	{
-		for (int j = ordem / 2; j < ordem - 1; j++)
-		{
-			z->filhos[j] = y->filhos[j + 1];
-		}
+		for (int j = 0; j < t + 1; j++)
+			z->filhos[j] = y->filhos[j + t + 1];
 	}
-	y->numChaves = ordem / 2;
-	for (int j = x->numChaves + 1; j > child + 1; j--)
-	{
+	y->numChaves = t;
+	for (int j = x->numChaves; j > child + 1; j--)
 		x->filhos[j + 1] = y->filhos[j];
-	}
 	x->filhos[child + 1] = z;
 	for (int j = x->numChaves; j > child; j--)
 	{
 		x->filhos[j + 1] = x->filhos[j];
 	}
-	x->chaves[child] = y->chaves[child + 1];
+	x->chaves[child] = y->chaves[t];
 	x->numChaves++;
 }
 
@@ -131,19 +127,9 @@ void insertNonFullNo(btNo *x, int chave, int ordem)
 	}
 	else
 	{
-		while (i >= 0 && chave < x->chaves[i])
-		{
-			i = i - 1;
-		}
-		if (x->filhos[i]->numChaves == ordem - 1)
-		{
-			splitChild(x, i, ordem);
-			if (chave > x->chaves[i])
-			{
-				i = i + 1;
-			}
-		}
 		insertNonFullNo(x->filhos[i], chave, ordem);
+		if (x->filhos[i]->numChaves == ordem)
+			splitChild(x, i, ordem);;
 	}
 }
 
@@ -154,9 +140,11 @@ void btInserir(bTree b, int chave)
 	insertNonFullNo(r, chave, b.ordem);
 	if (r->numChaves == b.ordem)
 	{
+
 		btNo *s = cpNo(r, b.ordem);
 		r->numChaves = 0;
 		r->filhos[0] = s;
+		s->ehFolha = r->ehFolha;
 		r->ehFolha = false;
 		splitChild(r, 0, b.ordem);
 	}
