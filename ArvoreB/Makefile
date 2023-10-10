@@ -7,10 +7,10 @@ all: $(NAME)
 
 
 $(NAME): $(OBJS)
-	gcc $(OBJS) -o $(NAME) -g3
+	gcc $(OBJS) -o $(NAME) -fsanitize=address  -g3
 
 $(OBJS):
-	gcc -c $(SRCS) -g3
+	gcc -c $(SRCS) -fsanitize=address -g3
 
 clean:
 	rm -rf $(OBJS)
